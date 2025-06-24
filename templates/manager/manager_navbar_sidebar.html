@@ -1,0 +1,84 @@
+<!-- Topbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('manager_dashboard') }}">
+            <i class="bi bi-graph-up-arrow me-2"></i>Manager Panel
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavManager" aria-controls="navbarNavManager" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavManager">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item">
+                    <span class="navbar-text me-3">
+                        Logged in as: {{ username }} ({{ role }})
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Flashed Messages Container -->
+<div class="container-fluid pt-3">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+</div>
+
+<!-- Main layout: Sidebar and Content Area wrapper -->
+<div class="container-fluid flex-grow-1">
+    <div class="row h-100">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-white border-end p-3 sidebar">
+            <div class="position-sticky" style="top: 1rem;">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-1 text-muted text-uppercase">
+                    <span>Navigation</span>
+                </h6>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page=='dashboard' %}active{% else %}link-dark{% endif %}"
+                           href="{{ url_for('manager_dashboard') }}">
+                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page=='logs' %}active{% else %}link-dark{% endif %}"
+                           href="{{ url_for('manager_authentication_logs') }}">
+                            <i class="bi bi-journals me-2"></i>Auth Logs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page=='personnel' %}active{% else %}link-dark{% endif %}"
+                           href="{{ url_for('manager_security_personnel_monitoring') }}">
+                            <i class="bi bi-person-badge me-2"></i>Security Personnel
+                        </a>
+                    </li>
+                     <!-- NEW LINK for Student Entries Report -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page=='student_entries' %}active{% else %}link-dark{% endif %}"
+                           href="{{ url_for('manager_student_entries_report') }}">
+                            <i class="bi bi-person-lines-fill me-2"></i>Student Entries
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page=='reports' %}active{% else %}link-dark{% endif %}"
+                           href="{{ url_for('manager_reports_analysis') }}">
+                            <i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Reports & Analysis
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>

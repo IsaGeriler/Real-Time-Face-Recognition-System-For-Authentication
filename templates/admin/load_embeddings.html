@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Embeddings – Admin Panel – Security Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .sidebar { min-height: calc(100vh - 56px); }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+<!-- Topbar (assuming you have one, or include your actual topbar) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('admin_staff') }}"> {# Or appropriate admin dashboard #}
+            <i class="bi bi-shield-lock-fill me-2"></i>Admin Panel
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAdmin" aria-controls="navbarNavAdmin" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAdmin">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item">
+                    <span class="navbar-text me-3">
+                        Logged in as: {{ username }} ({{ role }})
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid flex-grow-1">
+    <div class="row h-100">
+        <!-- Sidebar (assuming you have one, or include your actual sidebar) -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-white border-end p-3 sidebar">
+            <div class="position-sticky" style="top: 1rem;">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-1 text-muted text-uppercase">
+                    <span>Navigation</span>
+                </h6>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='staff' %}active{% else %}link-dark{% endif %}" href="{{ url_for('admin_staff') }}">
+                            <i class="bi bi-people-fill me-2"></i>Staff Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='students' %}active{% else %}link-dark{% endif %}" href="{{ url_for('admin_students') }}">
+                            <i class="bi bi-mortarboard-fill me-2"></i>Student Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='load_embeddings' %}active{% else %}link-dark{% endif %}" href="{{ url_for('load_embeddings_route') }}">
+                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Load Embeddings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <!-- Flashed Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message_text in messages %}
+                        <div class="alert alert-{{ category if category else 'info' }} alert-dismissible fade show" role="alert">
+                            {{ message_text }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {# Display direct message if flash is not used for some reason or for immediate feedback #}
+            {% if message and not get_flashed_messages() %}
+                <div class="alert alert-{{ 'success' if 'Successfully' in message or 'Loaded' in message else 'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                     <h4 class="mb-0"><i class="bi bi-database-fill-up me-2"></i>Load Student Embeddings</h4>
+                </div>
+                <div class="card-body">
+                    <p>This action will **clear existing embeddings** and then load student face embeddings from the selected JSON file into the database.</p>
+                    <p>Ensure the JSON files (<code>reduced_face_embeddings_mean.json</code> or <code>raw_face_embeddings.json</code>) are correctly formatted and placed in <code>persistence/models/</code>.</p>
+
+                    <form method="post" class="mt-3">
+                        <div class="mb-3">
+                            <label for="load_type_select" class="form-label">Select Embedding Type to Load:</label>
+                            <select class="form-select" id="load_type_select" name="load_type">
+                                <option value="mean" selected>Mean Embeddings (1 per angle, from reduced_face_embeddings_mean.json)</option>
+                                <option value="all">All Individual Embeddings (up to 8 per angle, from raw_face_embeddings.json)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-repeat me-2"></i>Load Selected Embeddings
+                        </button>
+                    </form>
+                </div>
+                 <div class="card-footer text-muted small">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i><strong>Warning:</strong> Loading embeddings will first delete all existing embeddings from the database.
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Footer (assuming you have one) -->
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

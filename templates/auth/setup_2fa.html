@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup 2FA – Security Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+<main class="d-flex flex-grow-1 align-items-center justify-content-center py-4">
+    <div class="card shadow-sm" style="width: 100%; max-width: 28rem;">
+        <div class="card-body p-4">
+            <h4 class="card-title text-center mb-4">Set Up Two-Factor Authentication</h4>
+
+            {% if message %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% endif %}
+
+            {% if qr_code %}
+                <p class="text-center">Scan this QR code with your authenticator app:</p>
+                <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code"
+                     class="img-fluid d-block mx-auto mb-3 border rounded">
+
+                <p class="text-center">Or, enter this secret key manually:<br><strong>{{ totp_secret_to_verify }}</strong></p>
+                <hr class="my-3">
+                <p>After scanning or entering the key, enter the verification code from your app below:</p>
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="totp_code" class="form-label">Verification Code:</label>
+                        <input type="text" class="form-control" id="totp_code" name="totp_code" required maxlength="6"
+                               minlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456">
+                    </div>
+                    <input type="hidden" name="totp_secret" value="{{ totp_secret_to_verify }}">
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="verify" class="btn btn-primary">Verify Code</button>
+                        <button type="submit" name="skip" class="btn btn-outline-secondary">Skip 2FA For Now</button>
+                    </div>
+                </form>
+            {% else %}
+                <p>For enhanced security, we recommend setting up two-factor authentication.</p>
+                <form method="post" class="mt-3">
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="setup" class="btn btn-primary">Set Up 2FA</button>
+                        <button type="submit" name="skip" class="btn btn-secondary">Skip 2FA</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

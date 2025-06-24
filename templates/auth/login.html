@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Security Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+<main class="d-flex flex-grow-1 align-items-center justify-content-center py-4">
+    <div class="card shadow-sm" style="width: 100%; max-width: 28rem;">
+        <div class="card-body p-4">
+            <h4 class="card-title text-center mb-4">Login to Security Panel</h4>
+
+            {% if error %}
+                <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="bi bi-person-badge"></i> Please Select Your Role</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="role" id="rolePersonnel" value="Security Personnel"
+                               {% if selected_role_value == 'Security Personnel' %}checked{% endif %} required>
+                        <label class="form-check-label" for="rolePersonnel">
+                            Security Personnel
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="role" id="roleManager" value="Security Manager"
+                               {% if selected_role_value == 'Security Manager' %}checked{% endif %}>
+                        <label class="form-check-label" for="roleManager">
+                            Security Manager
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="role" id="roleAdmin" value="Administrator"
+                               {% if selected_role_value == 'Administrator' %}checked{% endif %}>
+                        <label class="form-check-label" for="roleAdmin">
+                            Administrator
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ username_value or '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

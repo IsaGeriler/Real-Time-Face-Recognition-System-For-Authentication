@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analysis – Manager Panel – Security Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .chart-container-main {
+            width: 100%;
+            height: 450px; /* Adjusted for better visibility */
+        }
+         .sidebar { min-height: calc(100vh - 56px - 48px); }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+{% include 'manager/manager_navbar_sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Reports & Analysis</h1>
+            </div>
+            <p class="lead">Overview of authentication performance. Select a date and chart type to view the report.</p>
+
+            <!-- Filter Controls Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-filter-circle-fill me-2"></i>View Report Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('manager_reports_analysis') }}" class="row g-3 align-items-end">
+                        <div class="col-md-4 col-sm-6">
+                            <label for="view-report-date" class="form-label">Date:</label>
+                            <input type="date" id="view-report-date" name="report_date" class="form-control" value="{{ report_date or '' }}">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label for="view-chart-type" class="form-label">Chart Type:</label>
+                            <select id="view-chart-type" name="chart_type" class="form-select">
+                                <option value="bar" {% if chart_type=='bar' %}selected{% endif %}>Bar Chart</option>
+                                <option value="line" {% if chart_type=='line' %}selected{% endif %}>Line Chart</option>
+                                <option value="pie" {% if chart_type=='pie' %}selected{% endif %}>Pie Chart</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-eye-fill me-1"></i>View Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Chart Visualization Card -->
+            {% if recognized_count is defined and unknown_count is defined %}
+            <div class="card shadow-sm mb-4">
+                 <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Authentication Data
+                        {% if report_date %} ({{ report_date }}) {% else %} (All Time) {% endif %}
+                        - {{ chart_type|capitalize }} Chart
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-main mx-auto">
+                        <canvas id="reportChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>Please select a date and chart type to view the report. If a date is selected and no data appears, there might be no logs for that specific day.
+                </div>
+            {% endif %}
+
+            <!-- Export Controls Card -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-download me-2"></i>Export Report</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('manager_reports_export') }}" class="row g-3 align-items-end">
+                        <div class="col-md-4 col-sm-6">
+                            <label for="export-report-date" class="form-label">Date (for export):</label>
+                            <input type="date" id="export-report-date" name="report_date" class="form-control" value="{{ report_date or '' }}" required>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label for="export-chart-type" class="form-label">Chart Type (for PDF):</label>
+                            <select id="export-chart-type" name="chart_type" class="form-select" required>
+                                <option value="bar" {% if chart_type=='bar' %}selected{% endif %}>Bar Chart</option>
+                                <option value="pie" {% if chart_type=='pie' %}selected{% endif %}>Pie Chart</option>
+                                <!-- Line chart export to PDF can be complex, confirm if supported -->
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label for="export-format" class="form-label">Export As:</label>
+                            <select id="export-format" name="export_format" class="form-select" required>
+                                <option value="csv">CSV</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cloud-download-fill me-1"></i>Download Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                 <div class="card-footer text-muted small">
+                    <i class="bi bi-info-circle-fill me-1"></i>Select date and format to download the authentication report.
+                </div>
+            </div>
+        </main>
+
+    </div> <!-- /.row (closes row from include) -->
+</div> <!-- /.container-fluid (closes container-fluid from include) -->
+
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const recognizedCount = parseFloat("{{ recognized_count | default(0) }}");
+    const unknownCount = parseFloat("{{ unknown_count | default(0) }}");
+    const currentChartType = "{{ chart_type or 'bar' }}";
+
+    const reportChartCanvas = document.getElementById('reportChart');
+    let reportChartInstance;
+
+    function renderDynamicChart(type, recognized, unknown) {
+        if (reportChartInstance) {
+            reportChartInstance.destroy();
+        }
+
+        if (!reportChartCanvas) {
+            // console.error("Report chart canvas not found!");
+            return; // Exit if canvas not present (e.g. no data to show)
+        }
+        const ctx = reportChartCanvas.getContext('2d');
+
+        const chartData = {
+            labels: ['Recognized', 'Unknown/Unrecognized'],
+            datasets: [{
+                data: [recognized, unknown],
+                backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                borderWidth: 1
+            }]
+        };
+
+        let chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', display: true },
+                title: { display: false }, // Title is in HTML
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || context.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed.y !== null && (type === 'bar' || type === 'line')) {
+                                label += context.parsed.y;
+                            } else if (type === 'pie') {
+                                label += context.parsed;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        };
+
+        if (type === 'bar' || type === 'line') {
+            chartData.datasets[0].label = 'Authentications';
+            chartOptions.scales = { y: { beginAtZero: true, ticks: { precision: 0 } } };
+        } else if (type === 'pie') {
+            chartData.datasets[0].label = 'Distribution';
+            if (chartOptions.scales) delete chartOptions.scales;
+        }
+
+        reportChartInstance = new Chart(ctx, { type: type, data: chartData, options: chartOptions });
+    }
+
+    if (reportChartCanvas) {
+        renderDynamicChart(currentChartType, recognizedCount, unknownCount);
+    }
+
+    // Sync export form fields with view form fields
+    const viewReportDateInput = document.getElementById('view-report-date');
+    const exportReportDateInput = document.getElementById('export-report-date');
+    const viewChartTypeSelect = document.getElementById('view-chart-type');
+    const exportChartTypeSelect = document.getElementById('export-chart-type');
+
+    if (viewReportDateInput && exportReportDateInput) {
+        exportReportDateInput.value = viewReportDateInput.value;
+        viewReportDateInput.addEventListener('change', function() {
+            exportReportDateInput.value = this.value;
+        });
+    }
+    if (viewChartTypeSelect && exportChartTypeSelect) {
+        exportChartTypeSelect.value = viewChartTypeSelect.value;
+        viewChartTypeSelect.addEventListener('change', function() {
+            exportChartTypeSelect.value = this.value;
+        });
+    }
+});
+</script>
+</body>
+</html>

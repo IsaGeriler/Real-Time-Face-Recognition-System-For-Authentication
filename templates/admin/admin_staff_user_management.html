@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management – Admin Panel – Security Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .sidebar { min-height: calc(100vh - 56px); } /* 56px is typical navbar height */
+        .table-actions select.form-select-sm { max-width: 180px; }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+<!-- Topbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="bi bi-shield-lock-fill me-2"></i>Admin Panel
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAdmin" aria-controls="navbarNavAdmin" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAdmin">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item">
+                    <span class="navbar-text me-3">
+                        Logged in as: {{ username }} ({{ role }})
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid flex-grow-1">
+    <div class="row h-100">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-white border-end p-3 sidebar">
+            <div class="position-sticky" style="top: 1rem;">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-1 text-muted text-uppercase">
+                    <span>Navigation</span>
+                </h6>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='staff' %}active{% else %}link-dark{% endif %}" href="{{ url_for('admin_staff') }}">
+                            <i class="bi bi-people-fill me-2"></i>Staff Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='students' %}active{% else %}link-dark{% endif %}" href="{{ url_for('admin_students') }}">
+                            <i class="bi bi-mortarboard-fill me-2"></i>Student Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_panel=='load_embeddings' %}active{% else %}link-dark{% endif %}" href="{{ url_for('load_embeddings_route') }}">
+                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Load Embeddings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            {% if message %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+
+            {% if qr_code %}
+                <div class="alert alert-success p-3 text-center" role="alert">
+                    <p class="mb-2">New user added. Scan this QR code with an authenticator app for 2FA setup:</p>
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code for 2FA" class="img-fluid d-block mx-auto mb-2 border rounded" style="max-width: 200px;">
+                    <p class="small text-muted mb-0">This QR code is unique to the new user and will only be shown once.</p>
+                </div>
+            {% endif %}
+
+            <!-- Add Staff User Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Add Staff User</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        <input type="hidden" name="action" value="add_user">
+                        <div class="col-md-4">
+                            <label for="usernameAdd" class="form-label">Username</label>
+                            <input id="usernameAdd" name="username" type="text" class="form-control" placeholder="Enter username" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="passwordAdd" class="form-label">Password</label>
+                            <input id="passwordAdd" name="password" type="password" class="form-control" placeholder="Enter password" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="roleAdd" class="form-label">Role</label>
+                            <select id="roleAdd" name="role" class="form-select" required>
+                                <option value="" disabled selected>Select Role</option>
+                                <option value="Security Personnel">Security Personnel</option>
+                                <option value="Security Manager">Security Manager</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 align-self-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle-fill me-1"></i>Add User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Staff Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-list-ul me-2"></i>Current Staff</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered table-sm">
+                            <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th style="width: 40%;">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for user in users_list %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.role }}</td>
+                                    <td class="table-actions">
+                                        <form method="POST" class="d-inline-block me-2 mb-1">
+                                            <input type="hidden" name="action" value="delete_user">
+                                            <input type="hidden" name="username" value="{{ user.username }}">
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Are you sure you want to delete user {{ user.username }}?');"
+                                                    {% if not user.can_delete %}disabled title="Cannot delete this user"{% endif %}>
+                                                <i class="bi bi-trash-fill me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                        <form method="POST" class="d-inline-block mb-1">
+                                            <input type="hidden" name="action" value="change_role">
+                                            <input type="hidden" name="username" value="{{ user.username }}">
+                                            <select name="new_role" class="form-select form-select-sm d-inline-block w-auto me-1">
+                                                <option value="Security Personnel" {% if user.role == 'Security Personnel' %}selected{% endif %}>Security Personnel</option>
+                                                <option value="Security Manager" {% if user.role == 'Security Manager' %}selected{% endif %}>Security Manager</option>
+                                                <option value="Administrator" {% if user.role == 'Administrator' %}selected{% endif %}>Administrator</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="bi bi-pencil-fill me-1"></i>Change Role
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No staff users found.</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Logs Card -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-clipboard-data-fill me-2"></i>Authentication Logs</h4>
+                </div>
+                <div class="card-body">
+                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped table-hover table-bordered table-sm">
+                            <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>Role</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') if log.timestamp.strftime else log.timestamp }}</td>
+                                    <td>{{ log.event }}</td>
+                                    <td>{{ log.role }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No authentication logs found.</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

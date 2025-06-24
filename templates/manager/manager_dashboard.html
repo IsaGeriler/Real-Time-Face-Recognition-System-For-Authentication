@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – Manager Panel – Security Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .chart-wrapper { height: 350px; }
+        .sidebar { min-height: calc(100vh - 56px - 48px); }
+        .table-sm-responsive { max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+{% include 'manager/manager_navbar_sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Overall Authentications Overview</h5>
+                        </div>
+                        <div class="card-body chart-wrapper">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Authentication Counts</h5>
+                        </div>
+                        <div class="card-body chart-wrapper">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Today's Student Entries -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-calendar-check me-2"></i>Students Recognized Today ({{ today_date_str }})</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if todays_entries_list %}
+                            <div class="table-responsive table-sm-responsive">
+                                <table class="table table-striped table-hover table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Name</th>
+                                            <th>Student ID</th>
+                                            <th>Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in todays_entries_list %}
+                                        <tr>
+                                            <td>{{ entry.timestamp.strftime('%H:%M:%S') }}</td>
+                                            <td>{{ entry.full_name }}</td>
+                                            <td>{{ entry.student_id }}</td>
+                                            <td>{{ entry.department }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="p-3 text-center text-muted">
+                                <i class="bi bi-person-check-fill me-1"></i>No students recognized yet today.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-building me-2"></i>Today's Entries by Department</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if department_summary_today %}
+                                <ul class="list-group list-group-flush">
+                                {% for dept, count in department_summary_today.items() %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ dept }}
+                                        <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted text-center mt-2">No entries to summarize by department.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                     <!-- MODIFIED Title -->
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>Recent "Unknown Face" Alerts (Last 10)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered table-sm mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>Role (Attempted)</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for fail in last_10_unknown_face %} <!-- MODIFIED variable name -->
+                                <tr>
+                                    <td>{{ fail.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') if fail.timestamp else 'N/A' }}</td>
+                                    <td>{{ fail.event }}</td>
+                                    <td>{{ fail.role if fail.role else 'N/A' }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center p-3">
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i>No "Unknown Face" alerts in the recent logs.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+</div>
+
+<footer class="text-center py-3 mt-auto bg-dark text-light">
+    <p class="mb-0 small">COMP/SOFT4902 Graduation Design Project: Real-Time Face Recognition System for Authentication <br>
+        Isa Berk Geriler (20SOFT1034) & Duygu Önder (21COMP1014). All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const recognizedCount = parseFloat("{{ recognized_count | default(0) }}");
+    const unknownCount = parseFloat("{{ unknown_count | default(0) }}"); // For "Unknown Face"
+
+    const pieCtx = document.getElementById('pieChart');
+    if (pieCtx) {
+        new Chart(pieCtx.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Recognized Student', 'Unknown Face'], // Labels match data
+                datasets: [{
+                    label: 'Authentication Status',
+                    data: [recognizedCount, unknownCount],
+                    backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    const barCtx = document.getElementById('barChart');
+    if (barCtx) {
+        new Chart(barCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Recognized Student', 'Unknown Face'], // Labels match data
+                datasets: [{
+                    label: 'Count',
+                    data: [recognizedCount, unknownCount],
+                    backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
